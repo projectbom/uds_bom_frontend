@@ -14,14 +14,12 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.0'
-          channel: 'stable'
           
-      - name: Get dependencies
-        run: flutter pub get
-        
       - name: Build web
-        run: flutter build web --release
-        
+        run: |
+          flutter pub get
+          flutter build web --release
+          
       - name: Deploy to Azure VM
         uses: appleboy/scp-action@master
         with:
