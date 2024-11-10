@@ -1,0 +1,22 @@
+default_platform(:web)
+
+platform :web do
+  desc "Build Flutter web app for development"
+  lane :build_dev do
+    sh("flutter build web --release --dart-define=ENVIRONMENT=development")
+  end
+
+  desc "Build Flutter web app for production"
+  lane :build_prod do
+    sh("flutter build web --release --dart-define=ENVIRONMENT=production")
+  end
+
+  desc "Deploy Flutter web app"
+  lane :deploy do
+    # Flutter 웹 빌드
+    sh("flutter build web --release")
+    
+    # 여기에 배포 스크립트 추가 (예: Firebase Hosting)
+    # sh("firebase deploy --only hosting")
+  end
+end
