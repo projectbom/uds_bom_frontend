@@ -1,33 +1,25 @@
-# Flutter/Dart 관련
-**/doc/api/
+# 웹 빌드 제외
+build/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
-.pub-cache/
-.pub/
-build/
 
-# iOS 관련
-**/ios/Flutter/.last_build_id
-**/ios/Flutter/app.zip
-**/ios/Flutter/flutter_assets/
-**/ios/Flutter/flutter_export_environment.sh
-**/ios/ServiceDefinitions.json
-**/ios/Runner/GeneratedPluginRegistrant.*
-
-# Android 관련
-**/android/**/gradle-wrapper.jar
-**/android/.gradle
-**/android/captures/
-**/android/gradlew
-**/android/gradlew.bat
-**/android/local.properties
-**/android/**/GeneratedPluginRegistrant.java
-
-# IDE 관련
+# IDE 설정
 .idea/
 .vscode/
 *.iml
-*.iws
-.DS_Store
+
+# 플랫폼 특정 폴더
+/android/
+/ios/
+/linux/
+/macos/
+/windows/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+.env
