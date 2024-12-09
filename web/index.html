@@ -6,44 +6,141 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="어디서봄 - 모임 장소 추천 서비스">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#ffffff">
-
-  <!-- 검색엔진 최적화 -->
-  <meta name="keywords" content="어디서봄, 모임장소, 장소추천">
-  <meta property="og:title" content="어디서봄">
-  <meta property="og:description" content="모임 장소 추천 서비스">
-
-  <!-- 웹앱 설정 -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="어디서봄">
   
   <title>어디서봄</title>
   <link rel="manifest" href="manifest.json">
-  <!-- 파비콘 설정 -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
   
-  <!-- iOS 아이콘 설정 -->
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-  <script>
-    var serviceWorkerVersion = null;
-  </script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage.js"></script>
   <script src="flutter.js" defer></script>
 </head>
 <body>
+  <div id="loading">
+    <style>
+      .loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        -ms-transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%);
+      }
+    </style>
+    <div class="loading">
+      <div>Loading...</div>
+    </div>
+  </div>
+
   <script>
-    window.addEventListener('load', function(ev) {
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
-          });
-        }
-      });
+    if (!window._flutter) {
+      window._flutter = {};
+    }
+    window._flutter.buildConfig = {
+      engineRevision: "{{flutter_engine_revision}}",
+      builds: [{
+        baseHref: "/",
+        renderer: "html"
+      }]
+    };
+
+    window.addEventListener('load', function() {
+      window.initializeGoogleMaps = async function(apiKey) {
+        return new Promise(async (resolve, reject) => {
+          try {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker&loading=async`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+
+            await new Promise((resolve) => script.onload = resolve);
+
+            const { Map } = await google.maps.importLibrary("maps");
+            const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+            await google.maps.importLibrary("places");
+
+            // 더미 맵 생성 (Places 서비스용)
+            const dummyDiv = document.createElement('div');
+            const map = new Map(dummyDiv);
+
+            window.initializeAutocomplete = function(inputElement, callback) {
+              const autocomplete = new google.maps.places.Autocomplete(inputElement, {
+                componentRestrictions: { country: 'kr' },
+                fields: ['geometry', 'formatted_address'],
+                types: ['geocode', 'establishment']
+              });
+
+              autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                if (place.geometry) {
+                  callback({
+                    latitude: place.geometry.location.lat(),
+                    longitude: place.geometry.location.lng(),
+                    address: place.formatted_address
+                  });
+                }
+              });
+            };
+            
+            window.getDirections= async function(directionsService, request) {
+              return new Promise((resolve, reject) => {
+                directionsService.route(request, (result, status) => {
+                  if (status === 'OK') {
+                    resolve(result);
+                  } else {
+                    reject(new Error('Directions request failed: ' + status));
+                  }
+                });
+              });
+            }
+
+            window.createAdvancedMarker = async function(position, title, snippet, type) {
+              if (!position || typeof position.lat !== 'number' || typeof position.lng !== 'number') {
+                console.error('Invalid position:', position);
+                return null;
+              }
+
+              const pinConfig = {
+                background: type === 'meeting' ? '#4CAF50' : '#4285F4',
+                borderColor: type === 'meeting' ? '#388E3C' : '#2756A3',
+                glyphColor: '#FFFFFF',
+                scale: 1.2
+              };
+
+              if (type === 'user') {
+                pinConfig.glyph = title ? title[0].toUpperCase() : 'U';
+              }
+
+              const pin = new PinElement(pinConfig);
+
+              return new AdvancedMarkerElement({
+                position: new google.maps.LatLng(position.lat, position.lng),
+                title: title,
+                content: pin.element
+              });
+            };
+
+            resolve();
+          } catch (error) {
+            console.error('Google Maps initialization error:', error);
+            reject(error);
+          }
+        });
+      };
+
+      _flutter.loader.load();
+    });
+  </script>
+
+  <script>
+    window.addEventListener('flutter-first-frame', function() {
+      var loadingIndicator = document.getElementById('loading');
+      if (loadingIndicator) {
+        loadingIndicator.remove();
+      }
     });
   </script>
 </body>
